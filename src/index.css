@@ -316,29 +316,37 @@ canvas {
   z-index: 20;
 }
 
-.joystick-base {
+.touch-layer {
   position: absolute;
-  bottom: calc(var(--safe-bottom) + 24px);
-  left: calc(var(--safe-left) + 24px);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: var(--shadow);
-  display: grid;
-  place-items: center;
-  z-index: 25;
+  inset: 0;
+  z-index: 15;
   touch-action: none;
 }
 
-.joystick-knob {
+.touch-marker {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  margin: -26px 0 0 -26px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffd9ec, #d9c6ff);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 6px 16px rgba(150, 120, 180, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   pointer-events: none;
-  transition: transform 0.05s linear;
+  z-index: 16;
+  animation: markerPop 0.15s ease;
+}
+
+@keyframes markerPop {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .jump-btn {
@@ -695,10 +703,6 @@ canvas {
     width: 66px;
     height: 66px;
     font-size: 22px;
-  }
-  .joystick-base {
-    transform: scale(0.92);
-    transform-origin: bottom left;
   }
   .modal {
     padding: 22px 18px 18px;
