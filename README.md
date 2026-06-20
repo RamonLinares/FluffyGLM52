@@ -46,6 +46,10 @@ npm run typecheck
 - `src/components/` — 3D scene: planet, decorations, player, quests, sky, post-processing.
 - `src/ui/` — HUD, compass, code modal, transport overlay, touch controls.
 
+## Acknowledgements
+
+This game was built with [OpenCode](https://opencode.ai) using the **GLM-5.2** model.
+
 ## License
 
 Personal project.
