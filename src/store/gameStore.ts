@@ -81,7 +81,7 @@ export const useGame = create<GameState>()(
         }),
     }),
     {
-      name: 'fluffy-hlm52-progress',
+      name: 'fluffy-glm52-progress',
       version: 1,
       partialize: (s) => ({
         seed: s.seed,
