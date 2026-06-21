@@ -7,11 +7,14 @@ import { lerpAngle, playerPos, playerUp, playerForward, playerVel, setCamera, ge
 
 const R = 1.05; // ball radius
 const SPEED = 11;
-const CAM_DIST = 11;
-const CAM_HEIGHT = 6;
-const LOOK_HEIGHT = 1.5;
 const GRAVITY = 26;
 const JUMP_FORCE = 9.5;
+
+// Mobile (touch) devices get a wider, further camera so more terrain is visible.
+const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+const CAM_DIST = isTouch ? 17 : 11;
+const CAM_HEIGHT = isTouch ? 8.5 : 6;
+const LOOK_HEIGHT = 1.5;
 
 interface Props {
   planet: PlanetConfig;

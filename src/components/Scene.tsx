@@ -28,6 +28,7 @@ function SceneContents() {
 }
 
 export default function Scene() {
+  const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
   return (
     <Canvas
       shadows
@@ -38,7 +39,7 @@ export default function Scene() {
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1.05,
       }}
-      camera={{ fov: 55, near: 0.1, far: 500, position: [0, 40, -16] }}
+      camera={{ fov: isTouch ? 62 : 55, near: 0.1, far: 500, position: [0, 40, -16] }}
     >
       <Suspense fallback={null}>
         <SceneContents />
