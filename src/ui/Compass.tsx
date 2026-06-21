@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { view } from '../game/shared';
+import { view, playerPos, playerUp } from '../game/shared';
 import { useGame } from '../store/gameStore';
 
-// Margin from the screen edge for the clamped arrow.
-const MARGIN = 84;
+// The arrow sits near screen center (where the player appears) and points in
+// the direction you need to roll to reach the nearest quest.
+const OFFSET = 70; // px from screen center
+const ARROW_SIZE = 60;
 
 export default function Compass() {
   const arrowRef = useRef<HTMLDivElement>(null);
@@ -12,7 +14,12 @@ export default function Compass() {
 
   useEffect(() => {
     let raf = 0;
-    const tmp = new THREE.Vector3();
+    const playerScreen = new THREE.Vector3();
+    const aheadWorld = new THREE.Vector3();
+    const aheadScreen = new THREE.Vector3();
+    const tangent = new THREE.Vector3();
+    const toQuest = new THREE.Vector3();
+
     const loop = () => {
       raf = requestAnimationFrame(loop);
       const cam = view.camera;
@@ -20,75 +27,77 @@ export default function Compass() {
       const targets = view.questTargets;
       const collected = useGame.getState().collectedIds;
 
-      // Nearest uncollected target by 3D distance to the camera.
-      let best: { pos: THREE.Vector3; dist: number } | null = null;
+      // Find nearest uncollected quest by surface distance (angular distance
+      // from the player's radial direction to the quest's radial direction).
+      let best: THREE.Vector3 | null = null;
+      let bestDot = -2;
+      const playerDir = playerUp; // = normalize(playerPos), the radial direction
       for (const t of targets) {
         if (collected.includes(t.id)) continue;
-        tmp.copy(t.pos).sub(cam.position);
-        const d = tmp.length();
-        if (!best || d < best.dist) best = { pos: t.pos, dist: d };
+        toQuest.copy(t.pos).normalize();
+        const dot = toQuest.dot(playerDir);
+        if (dot > bestDot) {
+          bestDot = dot;
+          best = t.pos;
+        }
       }
       const el = arrowRef.current;
-      if (!el) return;
-      if (!best) {
+      if (!el || !best) {
         setHidden(true);
         return;
       }
       setHidden(false);
 
-      // Project the quest world position to normalized device coords.
-      tmp.copy(best.pos).project(cam);
-      const inFront = tmp.z < 1 && tmp.z > -1;
-      let x = tmp.x;
-      let y = tmp.y;
-      if (!inFront) {
-        // Behind the camera: flip so the arrow points toward where it will reappear.
-        x = -x;
-        y = -y;
+      // Surface bearing: tangent direction at the player's position toward the
+      // quest. This is the direction to roll along the great circle to get there.
+      // tangent = normalize(questPos - (questPos · up) * up)
+      toQuest.copy(best).normalize();
+      tangent.copy(toQuest).addScaledVector(playerDir, -toQuest.dot(playerDir));
+      if (tangent.lengthSq() < 1e-8) {
+        // Quest is directly above/below; pick the player's forward as fallback.
+        tangent.set(0, 0, 1);
       }
-      // Clamp to a rounded margin rectangle.
-      const ax = Math.abs(x);
-      const ay = Math.abs(y);
-      if (ax > 1 || ay > 1) {
-        const sx = ax > 0 ? (ax - 1) : 0;
-        const sy = ay > 0 ? (ay - 1) : 0;
-        if (sx * (window.innerHeight - 2 * MARGIN) > sy * (window.innerWidth - 2 * MARGIN)) {
-          x = Math.sign(x);
-          y = y / ax;
-        } else {
-          y = Math.sign(y);
-          x = x / ay;
-        }
+      tangent.normalize();
+
+      // Project the player position and a point slightly ahead in the tangent
+      // direction to get the screen-space bearing.
+      playerScreen.copy(playerPos).project(cam);
+      aheadWorld.copy(playerPos).addScaledVector(tangent, 3);
+      aheadScreen.copy(aheadWorld).project(cam);
+
+      // Screen-space direction from player to the ahead point.
+      let dx = aheadScreen.x - playerScreen.x;
+      let dy = aheadScreen.y - playerScreen.y;
+
+      // If the ahead point is behind the camera (z > 1), the projection flips.
+      // Detect this and flip the direction so the arrow still points the right way.
+      if (aheadScreen.z > 1 || playerScreen.z > 1) {
+        dx = -dx;
+        dy = -dy;
       }
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      const sx = (x * 0.5 + 0.5) * w;
-      const sy = (-y * 0.5 + 0.5) * h;
-      const cx = w / 2;
-      const cy = h / 2;
-      const dx = sx - cx;
-      const dy = sy - cy;
-      const angle = Math.atan2(dy, dx);
-      // Clamp position inside the margin.
-      const halfW = w / 2 - MARGIN;
-      const halfH = h / 2 - MARGIN;
-      let px = dx;
-      let py = dy;
-      const mag = Math.hypot(px, py);
-      if (mag > 0) {
-        // Scale into an ellipse with halfW/halfH radii along the direction.
-        const ux = px / mag;
-        const uy = py / mag;
-        const reach = Math.min(
-          Math.abs(halfW / ux) || Infinity,
-          Math.abs(halfH / uy) || Infinity
-        );
-        const r = Math.min(mag, reach);
-        px = ux * r;
-        py = uy * r;
+
+      const len = Math.hypot(dx, dy);
+      if (len < 1e-6) {
+        el.style.opacity = '0';
+        return;
       }
-      el.style.transform = `translate(${cx + px - 30}px, ${cy + py - 30}px) rotate(${angle}rad)`;
-      el.style.opacity = inFront ? '0.55' : '1';
+      dx /= len;
+      dy /= len;
+
+      // Screen Y is flipped (NDC y-up vs screen y-down).
+      const screenDx = dx;
+      const screenDy = -dy;
+      const angle = Math.atan2(screenDy, screenDx);
+
+      // Place the arrow OFFSET pixels from screen center in the bearing direction.
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const px = cx + screenDx * OFFSET - ARROW_SIZE / 2;
+      const py = cy + screenDy * OFFSET - ARROW_SIZE / 2;
+
+      el.style.transform = `translate(${px}px, ${py}px) rotate(${angle}rad)`;
+      // Fade based on how close the quest is to being directly ahead on screen.
+      el.style.opacity = '0.85';
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
