@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { type PlanetConfig, PLANET_RADIUS, heightOnSphere, getNoise3D } from '../game/planets';
 import { input, consumeTapJump } from '../hooks/useControls';
-import { lerpAngle, playerPos, playerUp, playerForward, playerVel, setCamera, getColliders } from '../game/shared';
+import { playerPos, playerUp, playerForward, playerVel, setCamera, getColliders } from '../game/shared';
 
 const R = 1.05; // ball radius
 const SPEED = 11;
@@ -182,11 +182,11 @@ export default function Player({ planet }: Props) {
       const q = new THREE.Quaternion().setFromAxisAngle(axis, angle);
       rollQuat.current.premultiply(q);
       ball.current.quaternion.copy(rollQuat.current);
-      // Steer the heading toward the velocity direction (chase-camera feel).
-      const yawTarget = Math.atan2(dir.x, dir.z);
-      const yawCur = Math.atan2(forward.current.x, forward.current.z);
-      const newYaw = lerpAngle(yawCur, yawTarget, 1 - Math.exp(-3 * dt));
-      forward.current.set(Math.sin(newYaw), 0, Math.cos(newYaw));
+      // Steer the heading toward the velocity direction, entirely in the
+      // tangent plane. Avoids world-space yaw (which breaks near the equator
+      // where the world XZ plane is perpendicular to the tangent plane).
+      const steer = 1 - Math.exp(-3 * dt);
+      forward.current.lerp(dir, steer);
       forward.current.addScaledVector(up.current, -forward.current.dot(up.current)).normalize();
     }
 
