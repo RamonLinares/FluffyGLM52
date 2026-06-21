@@ -246,6 +246,17 @@ canvas {
   opacity: 0.5;
 }
 
+.quest.active {
+  background: linear-gradient(90deg, rgba(255, 209, 232, 0.25), transparent);
+  border-radius: 8px;
+  margin: -2px -4px;
+  padding: 2px 4px;
+}
+
+.quest.active .quest-state {
+  color: var(--accent);
+}
+
 .quest.done .quest-name {
   text-decoration: line-through;
 }

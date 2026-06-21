@@ -22,6 +22,13 @@ export function setQuestTargets(ts: QuestTarget[]): void {
   view.questTargets = ts;
 }
 
+// The quest ID the compass is currently pointing at, written by the compass
+// each frame and read by the HUD to highlight the active quest.
+export let compassTargetId: number | null = null;
+export function setCompassTargetId(id: number | null): void {
+  compassTargetId = id;
+}
+
 // Static collider registry for fixed world elements (decorations).
 // Decorations publish their spheres here; the Player resolves against them
 // each frame. Positions are in world space and stay static (decorations are
