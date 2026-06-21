@@ -109,12 +109,25 @@ const QuestMarker = memo(function QuestMarker({ id, kind, dir, height, color, co
       <group>
         <QuestModel kind={kind} color={color} color2={color2} />
       </group>
-      {/* Light pillar so the quest is visible from across the planet. */}
+      {/* Tall glowing beam so the quest is visible from across the planet. */}
       <mesh position={[0, -1.3, 0]}>
-        <cylinderGeometry args={[0.06, 0.22, 2.8, 12, 1, true]} />
-        <meshBasicMaterial color={color} transparent opacity={0.2} depthWrite={false} side={THREE.DoubleSide} fog={false} />
+        <cylinderGeometry args={[0.08, 0.3, 2.8, 12, 1, true]} />
+        <meshBasicMaterial color={color} transparent opacity={0.35} depthWrite={false} side={THREE.DoubleSide} fog={false} />
       </mesh>
-      <pointLight position={[0, 0, 0]} intensity={0.9} distance={6} color={color} />
+      {/* Sky beacon: a tall, bright pillar that rises high above the surface
+          so you can spot the quest from anywhere on the planet. */}
+      <mesh position={[0, 12, 0]}>
+        <cylinderGeometry args={[0.04, 0.12, 22, 8, 1, true]} />
+        <meshBasicMaterial color={color} transparent opacity={0.28} depthWrite={false} side={THREE.DoubleSide} fog={false} />
+      </mesh>
+      {/* Floating ring halo above the quest for extra visibility. */}
+      <mesh position={[0, 4, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.8, 1.2, 24]} />
+        <meshBasicMaterial color={color} transparent opacity={0.4} side={THREE.DoubleSide} depthWrite={false} fog={false} />
+      </mesh>
+      <pointLight position={[0, 0, 0]} intensity={1.2} distance={10} color={color} />
+      {/* A second light high up so the beacon glows from afar. */}
+      <pointLight position={[0, 12, 0]} intensity={0.6} distance={20} color={color} />
     </group>
   );
 });
