@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { view, playerPos, playerUp, setCompassTargetId } from '../game/shared';
+import { view, playerPos, setCompassTargetId } from '../game/shared';
 import { useGame } from '../store/gameStore';
 
 const OFFSET = 70;
@@ -71,13 +71,6 @@ export default function Compass() {
 
       let dx = aheadScreen.x - playerScreen.x;
       let dy = aheadScreen.y - playerScreen.y;
-
-      // If the ahead point is behind the camera (NDC z > 1), the projection
-      // mirrors through the center — negate to get the true bearing direction.
-      if (aheadScreen.z > 1) {
-        dx = -dx;
-        dy = -dy;
-      }
 
       const len = Math.hypot(dx, dy);
       if (len < 1e-6) {

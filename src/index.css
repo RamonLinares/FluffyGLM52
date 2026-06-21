@@ -303,7 +303,7 @@ canvas {
 }
 
 .compass-arrow i {
-  transform: rotate(-45deg);
+  transform: rotate(45deg);
   text-shadow: 0 0 12px var(--accent-soft);
 }
 
