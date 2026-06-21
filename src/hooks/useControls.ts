@@ -6,6 +6,7 @@ export const input = {
   x: 0, // strafe: -1 left .. +1 right
   y: 0, // forward: -1 back .. +1 forward
   jump: false,
+  teleport: false, // debug: teleport near the active quest
   _kb: { x: 0, y: 0 },
   _joy: { x: 0, y: 0 },
   _keys: new Set<string>(),
@@ -61,6 +62,7 @@ export function useKeyboardControls(): void {
     const down = (e: KeyboardEvent) => {
       if (e.repeat) return;
       if (e.code === 'Space') input.jump = true;
+      if (e.code === 'KeyT') input.teleport = true;
       input._keys.add(e.code);
       updateKeyboard();
     };
