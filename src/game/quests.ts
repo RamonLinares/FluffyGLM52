@@ -25,13 +25,14 @@ const QUEST_VERBS: Record<QuestKind, string[]> = {
 
 const KINDS: QuestKind[] = ['orb', 'bell', 'lantern', 'flower', 'shard', 'wisp', 'star'];
 
+// Vibrant, saturated colors that pop against pastel terrain.
 const QUEST_COLORS = [
-  '#ffd1e8', '#cdf7df', '#e0d6ff', '#ffd9c6', '#cdeeff',
-  '#ffe9bd', '#ffd8e2', '#d4dbff', '#ffc2a0', '#b6f0d4',
+  '#ff3d8a', '#00e6a8', '#9d4eff', '#ff7a30', '#00b4ff',
+  '#ffd600', '#ff5a7a', '#5a6eff', '#ff4d4d', '#00d97e',
 ];
 const QUEST_COLORS2 = [
-  '#ff9ecb', '#7fe7b0', '#b39cff', '#ffb088', '#7cd6ff',
-  '#ffd06a', '#ff9fb6', '#9aa8ff', '#ff8f6a', '#5fd9a8',
+  '#ffffff', '#fff8e0', '#e0f8ff', '#fff0f5', '#f0fff8',
+  '#fffbe0', '#ffe0ec', '#e0e8ff', '#fff5e0', '#e0fff5',
 ];
 
 export function generateQuests(planet: PlanetConfig): Quest[] {
