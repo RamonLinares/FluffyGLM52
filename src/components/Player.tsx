@@ -3,7 +3,8 @@ import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { type PlanetConfig, PLANET_RADIUS, heightOnSphere, getNoise3D } from '../game/planets';
 import { input, consumeTapJump } from '../hooks/useControls';
-import { playerPos, playerUp, playerForward, playerVel, setCamera, getColliders, view, compassTargetId } from '../game/shared';
+import { playerPos, playerUp, playerForward, playerVel, setCamera, getColliders, view } from '../game/shared';
+import { useGame } from '../store/gameStore';
 
 const R = 1.05; // ball radius
 const SPEED = 11;
@@ -85,22 +86,30 @@ export default function Player({ planet }: Props) {
     const g = group.current;
     if (!g) return;
 
-    // Debug teleport: press T to snap near the compass-selected quest.
+    // Debug teleport: press T to snap near the nearest uncollected quest.
     if (input.teleport) {
       input.teleport = false;
-      const targetId = compassTargetId;
-      const target = targetId != null ? view.questTargets.find((t) => t.id === targetId) : null;
-      if (target) {
-        const questDir = target.pos.clone().normalize();
-        // Place the player 6 units away from the quest along the surface (arc),
-        // which is well outside the 2.6 collection radius but close enough to see.
-        const angOffset = 6 / PLANET_RADIUS; // radians
-        // Find a tangent direction to offset along (any perpendicular to questDir).
+      const collected = useGame.getState().collectedIds;
+      // Find nearest uncollected quest directly (don't rely on compassTargetId
+      // which may be stale right after a planet transport).
+      let bestTarget: { id: number; pos: THREE.Vector3 } | null = null;
+      let bestDot = -2;
+      const myDir = pos.current.clone().normalize();
+      for (const t of view.questTargets) {
+        if (collected.includes(t.id)) continue;
+        const d = t.pos.clone().normalize().dot(myDir);
+        if (d > bestDot) {
+          bestDot = d;
+          bestTarget = t;
+        }
+      }
+      if (bestTarget) {
+        const questDir = bestTarget.pos.clone().normalize();
+        const angOffset = 6 / PLANET_RADIUS;
         const tan = new THREE.Vector3();
         if (Math.abs(questDir.y) < 0.9) tan.crossVectors(questDir, new THREE.Vector3(0, 1, 0));
         else tan.crossVectors(questDir, new THREE.Vector3(1, 0, 0));
         tan.normalize();
-        // Rotate questDir by angOffset around the tangent axis.
         const q = new THREE.Quaternion().setFromAxisAngle(tan, angOffset);
         const landDir = questDir.clone().applyQuaternion(q).normalize();
         const noise = getNoise3D(planet.seed);
@@ -111,15 +120,13 @@ export default function Player({ planet }: Props) {
         vVel.current = 0;
         grounded.current = true;
         up.current.copy(landDir);
-        // Face toward the quest.
         forward.current.copy(questDir).addScaledVector(landDir, -questDir.dot(landDir)).normalize();
-        // Snap camera.
         camera.position.copy(pos.current).addScaledVector(forward.current, -CAM_DIST).addScaledVector(up.current, CAM_HEIGHT);
         camera.up.copy(up.current);
         camera.lookAt(pos.current.x + up.current.x * LOOK_HEIGHT, pos.current.y + up.current.y * LOOK_HEIGHT, pos.current.z + up.current.z * LOOK_HEIGHT);
-        console.log('[DEBUG] Teleported near quest', targetId, 'at distance 6');
+        console.log('[DEBUG] Teleported near quest', bestTarget.id, 'at distance 6');
       } else {
-        console.log('[DEBUG] No compass target to teleport to');
+        console.log('[DEBUG] No uncollected quest target found. Targets:', view.questTargets.length, 'Collected:', collected.length);
       }
     }
 
