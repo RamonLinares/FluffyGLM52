@@ -16,6 +16,7 @@ interface Props {
 
 export default function Quests({ planet }: Props) {
   const quests = useQuests();
+  const seed = useGame((s) => s.seed);
   const collect = useGame((s) => s.collect);
   const beginTransport = useGame((s) => s.beginTransport);
   const allCollected = useAllCollected();
@@ -56,7 +57,7 @@ export default function Quests({ planet }: Props) {
   return (
     <>
       {quests.map((q) => (
-        <QuestMarker key={q.id} id={q.id} kind={q.kind} dir={q.dir} height={q.height} color={q.color} color2={q.color2} />
+        <QuestMarker key={`${seed}-${q.id}`} id={q.id} kind={q.kind} dir={q.dir} height={q.height} color={q.color} color2={q.color2} />
       ))}
     </>
   );
