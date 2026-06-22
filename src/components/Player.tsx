@@ -105,7 +105,7 @@ export default function Player({ planet }: Props) {
       }
       if (bestTarget) {
         const questDir = bestTarget.pos.clone().normalize();
-        const angOffset = 6 / PLANET_RADIUS;
+        const angOffset = 8 / PLANET_RADIUS; // 8 units away
         const tan = new THREE.Vector3();
         if (Math.abs(questDir.y) < 0.9) tan.crossVectors(questDir, new THREE.Vector3(0, 1, 0));
         else tan.crossVectors(questDir, new THREE.Vector3(1, 0, 0));
@@ -120,11 +120,29 @@ export default function Player({ planet }: Props) {
         vVel.current = 0;
         grounded.current = true;
         up.current.copy(landDir);
+        // Face toward the quest (so it's directly in front of you).
         forward.current.copy(questDir).addScaledVector(landDir, -questDir.dot(landDir)).normalize();
+        // Camera behind the player, looking toward the quest.
         camera.position.copy(pos.current).addScaledVector(forward.current, -CAM_DIST).addScaledVector(up.current, CAM_HEIGHT);
         camera.up.copy(up.current);
-        camera.lookAt(pos.current.x + up.current.x * LOOK_HEIGHT, pos.current.y + up.current.y * LOOK_HEIGHT, pos.current.z + up.current.z * LOOK_HEIGHT);
-        console.log('[DEBUG] Teleported near quest', bestTarget.id, 'at distance 6');
+        camera.lookAt(
+          bestTarget.pos.x,
+          bestTarget.pos.y,
+          bestTarget.pos.z
+        );
+
+        // Diagnostic: where are we, where is the quest, what's the distance?
+        const dist = pos.current.distanceTo(bestTarget.pos);
+        const questPos = bestTarget.pos;
+        console.log('[DEBUG] Teleport:', {
+          questId: bestTarget.id,
+          playerPos: `(${pos.current.x.toFixed(1)}, ${pos.current.y.toFixed(1)}, ${pos.current.z.toFixed(1)})`,
+          questPos: `(${questPos.x.toFixed(1)}, ${questPos.y.toFixed(1)}, ${questPos.z.toFixed(1)})`,
+          distance: dist.toFixed(2),
+          questHeight: questPos.length().toFixed(2),
+          playerHeight: pos.current.length().toFixed(2),
+          forward: `(${forward.current.x.toFixed(2)}, ${forward.current.y.toFixed(2)}, ${forward.current.z.toFixed(2)})`,
+        });
       } else {
         console.log('[DEBUG] No uncollected quest target found. Targets:', view.questTargets.length, 'Collected:', collected.length);
       }
