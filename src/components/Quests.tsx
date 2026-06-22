@@ -6,9 +6,9 @@ import { type PlanetConfig, PLANET_RADIUS } from '../game/planets';
 import { playerPos, setQuestTargets, type QuestTarget } from '../game/shared';
 import type { QuestKind } from '../game/quests';
 
-const HOVER = 5; // well above any terrain dip so items never sink
-const COLLECT_RADIUS = 3.2;
-const MODEL_SCALE = 1.8; // items are bigger and easier to see
+const HOVER = 2.5; // above surface so items don't sink, but reachable without jumping
+const COLLECT_RADIUS = 4.5; // generous so you collect by rolling near, not jumping
+const MODEL_SCALE = 1.8;
 
 interface Props {
   planet: PlanetConfig;
@@ -144,7 +144,7 @@ const QuestMarker = memo(function QuestMarker({ id, kind, dir, height, color, co
 
       {/* --- Large pulsing ground ring --- */}
       <mesh ref={ringRef} position={[0, -HOVER + 0.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[2.5, 3.5, 32]} />
+        <ringGeometry args={[3, 4.2, 32]} />
         <meshBasicMaterial
           color={color}
           transparent
